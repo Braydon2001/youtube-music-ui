@@ -1,86 +1,149 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Now Playing</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Now Playing Widget</title>
   <style>
-    * {
-      box-sizing: border-box;
-    }
-
     body {
       margin: 0;
       padding: 0;
-      background-color: #0f0f0f;
-      color: #ffffff;
       font-family: 'Segoe UI', sans-serif;
+      background: #111;
+      color: #fff;
       display: flex;
-      flex-direction: column;
-      justify-content: center;
       align-items: center;
+      justify-content: center;
       height: 100vh;
-      text-align: center;
-      overflow: hidden;
     }
 
-    #container {
+    .widget {
+      display: flex;
+      align-items: center;
+      background: #1e1e1e;
+      padding: 16px 24px;
+      border-radius: 16px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+      transition: all 0.3s ease-in-out;
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeInUp 0.5s ease-out forwards;
+      gap: 20px;
+    }
+
+    .thumbnail {
+      width: 64px;
+      height: 64px;
+      border-radius: 8px;
+      object-fit: cover;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.4);
+    }
+
+    .info {
       display: flex;
       flex-direction: column;
-      gap: 10px;
-      opacity: 0;
-      transition: opacity 0.5s ease-in-out;
     }
 
-    #song {
-      font-size: 28px;
+    .title {
+      font-size: 1.2rem;
       font-weight: 600;
-      transition: all 0.3s ease-in-out;
+      color: #fff;
+      animation: slideIn 0.5s ease;
     }
 
-    #artist {
-      font-size: 20px;
-      font-weight: 300;
-      color: #bbbbbb;
-      transition: all 0.3s ease-in-out;
+    .artist {
+      font-size: 1rem;
+      color: #ccc;
+      margin-top: 4px;
+      animation: slideIn 0.6s ease;
     }
 
-    .fade-in {
-      opacity: 1 !important;
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateX(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
     }
   </style>
 </head>
 <body>
-  <div id="container">
-    <div id="song">Waiting for song...</div>
-    <div id="artist"></div>
+  <div class="widget" id="widget">
+    <img id="thumbnail" class="thumbnail" src="" alt="Thumbnail" />
+    <div class="info">
+      <div class="title" id="title">Waiting for song...</div>
+      <div class="artist" id="artist"></div>
+    </div>
   </div>
 
   <script>
-    const ws = new WebSocket('ws://localhost:8080');
-    const container = document.getElementById('container');
-    const songEl = document.getElementById('song');
-    const artistEl = document.getElementById('artist');
+    const titleElem = document.getElementById('title');
+    const artistElem = document.getElementById('artist');
+    const thumbnailElem = document.getElementById('thumbnail');
+    const widget = document.getElementById('widget');
+
+    const socket = new WebSocket('ws://localhost:8080');
 
     let currentSong = '';
     let currentArtist = '';
+    let currentThumbnail = '';
 
-    ws.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      const newSong = data.title || 'Unknown Title';
-      const newArtist = data.artist || '';
+    socket.addEventListener('message', function (event) {
+      try {
+        const data = JSON.parse(event.data);
+        //titleElem.textContent = data.title || "Unknown Title";
+        //artistElem.textContent = data.artist || "Unknown Artist";
+        const newSong = data.title || "Unknown Title";
+        const newArtist = data.artist || "Unknown Artist";
+        const newThumbnail = data.thumbnail || '';
 
-      if (newSong !== currentSong || newArtist !== currentArtist) {
-        container.classList.remove('fade-in');
-        void container.offsetWidth; // force reflow for animation restart
-        container.classList.add('fade-in');
+        const songChanged = newSong !== currentSong || newArtist !== currentArtist;
+        const thumbnailChanged = newThumbnail !== currentThumbnail;
 
-        songEl.textContent = newSong;
-        artistEl.textContent = newArtist;
+        //if (data.thumbnail) {
+          //thumbnailElem.src = data.thumbnail;
+        //}
 
-        currentSong = newSong;
-        currentArtist = newArtist;
+        if (songChanged) {
+          titleElem.textContent = newSong;
+          artistElem.textContent = newArtist;
+
+          // Trigger animation only on change
+          widget.style.animation = 'none';
+          void widget.offsetWidth; // force reflow
+          widget.style.animation = 'fadeInUp 0.5s ease-out forwards';
+
+          currentSong = newSong;
+          currentArtist = newArtist;
+        }
+
+        if (thumbnailChanged && newThumbnail) {
+          thumbnailElem.src = newThumbnail;
+          currentThumbnail = newThumbnail;
+        }
+
+        // Trigger animation manually
+        //widget.style.animation = 'none';
+        //void widget.offsetWidth; // Trigger reflow
+        //widget.style.animation = 'fadeInUp 0.5s ease-out forwards';
+      } catch (err) {
+        console.error("Failed to parse message", err);
       }
-    };
+    });
   </script>
 </body>
 </html>
