@@ -1,59 +1,86 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Now Playing Widget</title>
-    <style>
-      body {
-        margin: 0;
-        background-color: #111;
-        color: #fff;
-        font-family: 'Segoe UI', sans-serif;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        height: 100vh;
-        text-align: center;
-      }
-  
-      .song-title {
-        font-size: 24px;
-        font-weight: bold;
-      }
-  
-      .song-authors {
-        font-size: 18px;
-        margin-top: 8px;
-      }
-    </style>
+  <meta charset="UTF-8">
+  <title>Now Playing</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #0f0f0f;
+      color: #ffffff;
+      font-family: 'Segoe UI', sans-serif;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      text-align: center;
+      overflow: hidden;
+    }
+
+    #container {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      opacity: 0;
+      transition: opacity 0.5s ease-in-out;
+    }
+
+    #song {
+      font-size: 28px;
+      font-weight: 600;
+      transition: all 0.3s ease-in-out;
+    }
+
+    #artist {
+      font-size: 20px;
+      font-weight: 300;
+      color: #bbbbbb;
+      transition: all 0.3s ease-in-out;
+    }
+
+    .fade-in {
+      opacity: 1 !important;
+    }
+  </style>
 </head>
 <body>
-    <div class="song-info">
-        <div id="song-title" class="song-title">Waiting for song...</div>
-        <div id="song-authors" class="song-authors"></div>
-    </div>
+  <div id="container">
+    <div id="song">Waiting for song...</div>
+    <div id="artist"></div>
+  </div>
 
-    <script>
-        const songEl = document.getElementById('song-title');
-        const authorEl = document.getElementById('song-authors');
-    
-        const socket = new WebSocket('ws://localhost:8800/ws');
-    
-        socket.onopen = () => console.log('Connected to song WebSocket');
-    
-        socket.onmessage = (event) => {
-          try {
-            const data = JSON.parse(event.data);
-            songEl.textContent = data.song || 'Unknown Song';
-            authorEl.textContent = data.author || '';
-          } catch (e) {
-            console.error('Invalid message', e);
-          }
-        };
-    
-        socket.onerror = (err) => console.error('WebSocket error:', err);
-      </script>
+  <script>
+    const ws = new WebSocket('ws://localhost:8080');
+    const container = document.getElementById('container');
+    const songEl = document.getElementById('song');
+    const artistEl = document.getElementById('artist');
+
+    let currentSong = '';
+    let currentArtist = '';
+
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      const newSong = data.title || 'Unknown Title';
+      const newArtist = data.artist || '';
+
+      if (newSong !== currentSong || newArtist !== currentArtist) {
+        container.classList.remove('fade-in');
+        void container.offsetWidth; // force reflow for animation restart
+        container.classList.add('fade-in');
+
+        songEl.textContent = newSong;
+        artistEl.textContent = newArtist;
+
+        currentSong = newSong;
+        currentArtist = newArtist;
+      }
+    };
+  </script>
 </body>
 </html>
