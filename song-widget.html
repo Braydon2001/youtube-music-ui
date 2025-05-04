@@ -5,18 +5,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Now Playing Widget</title>
     <style>
-        /* Your custom CSS for the widget */
-        .song-info {
-            font-size: 24px;
-            color: white;
-            font-family: Arial, sans-serif;
-        }
-        .song-title {
-            font-weight: bold;
-        }
-        .song-authors {
-            font-style: italic;
-        }
+      body {
+        margin: 0;
+        background-color: #111;
+        color: #fff;
+        font-family: 'Segoe UI', sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        text-align: center;
+      }
+  
+      .song-title {
+        font-size: 24px;
+        font-weight: bold;
+      }
+  
+      .song-authors {
+        font-size: 18px;
+        margin-top: 8px;
+      }
     </style>
 </head>
 <body>
