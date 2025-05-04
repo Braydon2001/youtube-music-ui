@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Now Playing Widget</title>
+    <style>
+        /* Your custom CSS for the widget */
+        .song-info {
+            font-size: 24px;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+        .song-title {
+            font-weight: bold;
+        }
+        .song-authors {
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="song-info">
+        <div id="song-title" class="song-title">Waiting for song...</div>
+        <div id="song-authors" class="song-authors"></div>
+    </div>
+
+    <script>
+        const songEl = document.getElementById('song-title');
+        const authorEl = document.getElementById('song-authors');
+    
+        const socket = new WebSocket('ws://localhost:8800/ws');
+    
+        socket.onopen = () => console.log('Connected to song WebSocket');
+    
+        socket.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            songEl.textContent = data.song || 'Unknown Song';
+            authorEl.textContent = data.author || '';
+          } catch (e) {
+            console.error('Invalid message', e);
+          }
+        };
+    
+        socket.onerror = (err) => console.error('WebSocket error:', err);
+      </script>
+</body>
+</html>
